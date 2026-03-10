@@ -6,7 +6,7 @@ interface FloorPlanProps {
     status: DeviceStatus[]
 }
 
-export const FloorPlan: React.FC<FloorPlanProps> = ({ status }) => {
+export const FloorPlan: React.FC<FloorPlanProps> = () => {
     const classRooms = [
         { id: 1, code: 'Class A3', devices: 3 },
         { id: 2, code: 'Class A2', devices: 2 },

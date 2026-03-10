@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+/// <reference types="vite/client" />
+import { useState } from 'react'
 import { Dashboard } from './components/Dashboard'
 import { Sidebar } from './components/Sidebar'
 import './App.css'

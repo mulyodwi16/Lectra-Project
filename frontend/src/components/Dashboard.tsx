@@ -12,21 +12,15 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ deviceId }) => {
     const [status, setStatus] = useState<DeviceStatus[]>([])
-    const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 
     const fetchStatus = async () => {
         try {
-            setLoading(true)
             const response = await tuyaService.getDeviceStatus(deviceId)
             setStatus(response.data || [])
-            setLastUpdate(new Date())
             setError(null)
         } catch (err: any) {
             setError(err.message || 'Failed to fetch device status')
-        } finally {
-            setLoading(false)
         }
     }
 
@@ -36,7 +30,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ deviceId }) => {
         return () => clearInterval(interval)
     }, [deviceId])
 
-    const activeDevices = status.filter(s => s.value === true).length
     const totalDevices = status.length
     const energyUsage = (Math.random() * 100).toFixed(2)
     const activeClassrooms = 2
