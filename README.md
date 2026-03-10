@@ -42,7 +42,7 @@ Dashboard real-time untuk monitoring sensor IoT menggunakan Tuya API dengan tekn
 - Node.js 20+ (untuk development lokal)
 - Tuya API Credentials
 
-## Quick Start
+## Quick Start (Local Development with Docker)
 
 ### 1. Clone Repository
 
@@ -51,57 +51,110 @@ git clone https://github.com/mulyodwi16/Lectra-Project.git
 cd Lectra-Project
 ```
 
-### 2. Setup Environment
+### 2. Configure Host File (Important!)
+
+Agar `lectra.local` bisa diakses, tambahkan entry ke host file:
+
+**Windows** (`C:\Windows\System32\drivers\etc\hosts`):
+```
+127.0.0.1   lectra.local
+```
+
+**Linux/Mac** (`/etc/hosts`):
+```bash
+echo "127.0.0.1   lectra.local" | sudo tee -a /etc/hosts
+```
+
+Atau cukup akses melalui `http://localhost` jika tidak mau edit hosts.
+
+### 3. Setup Environment Variables
 
 ```bash
 cp .env.example .env
-# Edit .env dan masukkan Tuya credentials Anda
+# Edit .env dengan Tuya credentials Anda
 ```
 
-```bash
-TUYA_CLIENT_ID=your_client_id
-TUYA_ACCESS_TOKEN=your_access_token
-TUYA_DEVICE_ID=your_device_id
+**File: `.env`**
+```env
+# Tuya IoT Platform Credentials
+TUYA_CLIENT_ID=your_client_id_from_tuya
+TUYA_ACCESS_TOKEN=your_access_token_from_tuya
+TUYA_DEVICE_ID=your_device_id_from_tuya
+
+# Environment
+ENVIRONMENT=development
 ```
 
-### 3. Run with Docker
+📝 **Cara mendapatkan Tuya credentials:**
+1. Daftar di [Tuya Developer Platform](https://platform.tuya.com)
+2. Create project → IoT Platform
+3. Get credentials di "Service Account" atau "Link Device"
+
+### 4. Run with Docker
 
 ```bash
 # Build images
 docker-compose build
 
-# Start services
+# Start all services (Traefik, Backend, Frontend)
 docker-compose up -d
+
+# Check status
+docker-compose ps
 ```
 
-✅ Akses dashboard di: **http://lectra.local** (atau `localhost`)
+✅ **Akses aplikasi:**
+- Dashboard: **http://lectra.local** (atau `http://localhost`)
+- API: **http://lectra.local/api/v1/health**
+- Traefik Dashboard: **http://localhost:8080**
 
-🔧 Traefik dashboard: **http://localhost:8080**
+> **⚠️ Catatan Arsitektur**: Nginx di dalam frontend container hanya serve React app. **Traefik** adalah main reverse proxy yang routing semua request.
 
-> **⚠️ Catatan**: Nginx di dalam frontend container hanya berfungsi sebagai web server internal untuk serve React app. **Traefik** adalah reverse proxy utama yang menghandle routing semua request dari luar.
-
-### Using Makefile (Recommended)
+### 5. Lihat Logs
 
 ```bash
-make build        # Build images
-make up           # Start services
-make down         # Stop services
-make logs         # View all logs
-make backend-logs # View backend logs
-make frontend-logs# View frontend logs
-make clean        # Remove services & images
-make rebuild      # Rebuild all (no cache)
+# Semua services
+docker-compose logs -f
+
+# Backend only
+docker-compose logs -f backend
+
+# Frontend only
+docker-compose logs -f frontend
 ```
 
-Or untuk development lokal:
+### 6. Stop Services
+
 ```bash
-make dev-backend   # Run Go backend locally
-make dev-frontend  # Run React frontend locally
+docker-compose down          # Stop & remove containers
+docker-compose down -v       # Stop & remove + volumes
 ```
 
-## Development Lokal (Tanpa Docker)
+### Using Makefile (Recommended for Quick Commands)
 
-### Backend (Go)
+```bash
+make build        # Build Docker images
+make up           # Start all services
+make down         # Stop all services
+make logs         # View all logs in real-time
+make backend-logs # View backend logs only
+make frontend-logs # View frontend logs only
+make clean        # Remove all containers & images
+make rebuild      # Rebuild all without cache
+```
+
+### Quick Commands untuk Development
+
+```bash
+make dev-backend   # Run Go backend locally di http://localhost:3000
+make dev-frontend  # Run React frontend locally di http://localhost:5173
+```
+
+## Deployment Guide
+
+### A. Local Development (Without Docker)
+
+#### Backend (Go)
 
 ```bash
 cd backend
@@ -109,37 +162,158 @@ go mod tidy
 cp .env.example .env
 
 # Edit .env dengan Tuya credentials
-# Kemudian run:
 go run .
-
 # Backend berjalan di http://localhost:3000
 ```
 
-### Frontend (React + Vite)
+#### Frontend (React + Vite)
 
 ```bash
 cd frontend
 npm install
 cp .env.example .env
-
-# Edit .env jika perlu (API URL sudah benar untuk local dev)
-# Kemudian run:
 npm run dev
-
 # Frontend berjalan di http://localhost:5173
 ```
 
-### Build untuk Production (Lokal)
+### B. Local Deployment with Docker (Recommended for Testing)
+
+Sudah tercakup di section **Quick Start** di atas.
+
+### C. Server Deployment (Ubuntu/Debian VPS)
+
+**Prerequisites di Server:**
+- Ubuntu 20.04+ atau Debian
+- Docker & Docker Compose installed
+- Domain name (e.g., `lectra.mydomain.com`)
+- SSL certificate (via Let's Encrypt)
+- SSH access ke server
+
+#### Step 1: Setup Server
 
 ```bash
-# Backend
-cd backend
-CGO_ENABLED=0 GOOS=linux go build -o lectra-backend .
+# SSH ke server
+ssh ubuntu@your-server-ip
 
-# Frontend
-cd frontend
-npm run build
-# Output: dist/
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Docker (jika belum)
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Add user ke docker group
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+#### Step 2: Clone & Setup Project
+
+```bash
+# Clone repository
+git clone https://github.com/mulyodwi16/Lectra-Project.git
+cd Lectra-Project
+
+# Create .env untuk production
+cp .env.example .env
+nano .env  # Edit dengan production credentials
+```
+
+#### Step 3: Configure Domain & SSL (Optional tapi Recommended)
+
+Edit `docker-compose.yml` untuk enable SSL dengan Traefik:
+
+```yaml
+services:
+  traefik:
+    command:
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--providers.docker=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=your-email@example.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/letsencrypt/acme.json:/letsencrypt/acme.json"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  frontend:
+    labels:
+      - "traefik.http.routers.frontend.rule=Host(`lectra.mydomain.com`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+
+  backend:
+    labels:
+      - "traefik.http.routers.backend.rule=Host(`lectra.mydomain.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+```
+
+#### Step 4: Deploy
+
+```bash
+# Build images
+docker-compose build
+
+# Start services
+docker-compose up -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+```
+
+#### Step 5: Verify Deployment
+
+```bash
+# Check backend health
+curl https://lectra.mydomain.com/api/v1/health
+
+# Check frontend
+curl https://lectra.mydomain.com
+
+# Check Traefik dashboard (untuk lokal saja, jangan expose ke public!)
+# http://localhost:8080
+```
+
+### D. Update Deployment
+
+```bash
+# Pull latest code
+git pull origin main
+
+# Rebuild & restart
+docker-compose up --build -d
+
+# Check status
+docker-compose logs -f
+```
+
+### E. Monitoring & Maintenance
+
+```bash
+# View real-time logs
+docker-compose logs -f
+
+# Check container health
+docker-compose ps
+
+# View resource usage
+docker stats
+
+# Clean up unused images/volumes
+docker system prune -v
+
+# Backup data (jika ada persistent volumes)
+docker-compose down
+tar -czf backup.tar.gz .
 ```
 
 ## Project Structure
@@ -230,74 +404,154 @@ GET /api/v1/health
 
 ## Troubleshooting
 
-### Backend tidak bisa connect ke Tuya API
-- Periksa TUYA_CLIENT_ID dan TUYA_ACCESS_TOKEN di .env
-- Pastikan device ID benar
-- Check internet connection
+### 1. Backend tidak bisa connect ke Tuya API
 
-### Frontend blank / styling tidak muncul
-- Clear browser cache (Ctrl + Shift + Delete)
-- Rebuild frontend: `docker-compose up --build frontend`
-- Check nginx configuration
+**Symptoms**: Error "401 Unauthorized" atau timeout
 
-### Traefik dashboard tidak accessible
-- Pastikan port 8080 tidak terpakai
-- Check docker network: `docker network ls`
-
-## Production Deployment
-
-### Using Docker Compose (Recommended)
-
+**Solutions**:
 ```bash
-# 1. Clone repository ke server
-git clone https://github.com/mulyodwi16/Lectra-Project.git
-cd Lectra-Project
+# Verifikasi .env credentials
+cat .env | grep TUYA
 
-# 2. Setup environment
-cp .env.example .env
-# Edit .env dengan production credentials
+# Test backend connection
+curl http://localhost:3000/api/v1/health
 
-# 3. Build & run
-docker-compose build
+# Check logs
+docker-compose logs backend
+
+# Pastikan device ID valid di Tuya platform
+```
+
+### 2. Frontend blank / styling tidak muncul
+
+**Solutions**:
+```bash
+# Clear browser cache (Ctrl + Shift + Delete)
+# Stop & rebuild frontend
+docker-compose down
+docker-compose up --build -d
+
+# Verify frontend is running
+docker-compose logs frontend
+```
+
+### 3. Traefik dashboard tidak accessible
+
+**Solutions**:
+```bash
+# Check if port 8080 is open
+netstat -an | grep 8080
+
+# Check docker network
+docker network ls
+docker network inspect lectra-network
+
+# Restart traefik
+docker-compose restart traefik
+```
+
+### 4. "Cannot connect to Docker daemon" error
+
+**Solutions**:
+```bash
+# Check if Docker is running
+docker -v
+
+# Start Docker service (Linux)
+sudo systemctl start docker
+
+# Check Docker by running a test container
+docker run hello-world
+```
+
+### 5. Port already in use (80, 8080, 3000)
+
+**Solutions**:
+```bash
+# Find process using port
+lsof -i :80     # Linux/Mac
+netstat -ano | findstr :80  # Windows
+
+# Kill process or use different port in docker-compose.yml
+```
+
+### 6. Host file tidak work (`lectra.local` not resolving)
+
+**Solutions**:
+- Gunakan `http://localhost` sebagai alternatif
+- Verify host file entry: `ping lectra.local`
+- Flush DNS cache: `ipconfig /flushdns` (Windows)
+
+### 7. Environment variables tidak ter-load
+
+**Solutions**:
+```bash
+# Verify .env file exists
+ls -la .env
+
+# Rebuild containers
+docker-compose down
+docker-compose build --no-cache
 docker-compose up -d
 
-# 4. Verify
-docker-compose logs -f
-curl http://localhost/api/v1/health
+# Check if env vars are loaded
+docker-compose exec backend env | grep TUYA
 ```
 
-### AWS/GCP/DigitalOcean Deployment
+## Security & Best Practices
 
-**Prerequisites:**
-- VPS dengan Docker & Docker Compose installed
-- Domain name untuk reverse proxy
-- SSL certificate (Let's Encrypt)
+### Environment Variables
+⚠️ **NEVER commit `.env` dengan real credentials!**
 
-**Steps:**
 ```bash
-# 1. SSH ke server
-ssh ubuntu@your-server-ip
-
-# 2. Clone & setup (seperti di atas)
-# ... follow steps 1-3
-
-# 3. Configure SSL dengan Traefik (update docker-compose.yml)
-# 4. Open firewall: ports 80, 443
-# 5. Point domain ke server IP
+# .gitignore (already configured)
+.env
+.env.local
+.env.*.local
 ```
 
-### Environment Variables untuk Production
+✅ **Production Security Checklist**:
+- [ ] Use `.env.example` sebagai template
+- [ ] Store credentials di secret management (AWS Secrets, Vault, etc)
+- [ ] Enable SSL/HTTPS dengan Let's Encrypt
+- [ ] Setup firewall (only allow ports 80, 443)
+- [ ] Use strong Tuya API credentials
+- [ ] Regular backups
+- [ ] Monitor logs regularly
+- [ ] Keep Docker images updated
 
-```env
-ENVIRONMENT=production
-TUYA_CLIENT_ID=prod_client_id
-TUYA_ACCESS_TOKEN=prod_access_token
-TUYA_DEVICE_ID=prod_device_id
+### Docker Security
+
+```bash
+# Run containers with non-root user (Dockerfiles sudah configured)
+# Limit resources
+docker-compose up -d --memory 512m
+
+# Scan images untuk vulnerabilities
+docker scan lectra-project_backend
+docker scan lectra-project_frontend
 ```
 
-⚠️ **Security:** Gunakan AWS Secrets Manager, GCP Secret Manager, atau HashiCorp Vault untuk production.
+### API Security Notes
 
-## Contributing
+- Backend API hanya bisa diakses via Traefik (tidak expose langsung)
+- Implement rate limiting jika expose ke public
+- Add authentication layer untuk production
+- Validate all user inputs di backend
+
+## Contributing & License
+
+Contributions welcome! Please:
+1. Fork repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+---
+
+**Built with ❤️ by Dimyodi**  
+Dokumentasi terakhir diupdate: March 2026
 
 Want to contribute? Great! Follow these steps:
 
