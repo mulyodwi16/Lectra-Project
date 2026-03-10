@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.10
+    container_name: lectra-traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - lectra-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lectra-backend
+    environment:
+      - PORT=3000
+      - TUYA_CLIENT_ID=${TUYA_CLIENT_ID}
+      - TUYA_ACCESS_TOKEN=${TUYA_ACCESS_TOKEN}
+      - TUYA_DEVICE_ID=${TUYA_DEVICE_ID}
+      - ENVIRONMENT=production
+    expose:
+      - "3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`lectra.local`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
+    networks:
+      - lectra-network
+    depends_on:
+      - traefik
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://lectra.local/api/v1
+        - VITE_DEVICE_ID=${TUYA_DEVICE_ID}
+    container_name: lectra-frontend
+    expose:
+      - "80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`lectra.local`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    networks:
+      - lectra-network
+    depends_on:
+      - traefik
+    restart: unless-stopped
+
+networks:
+  lectra-network:
+    driver: bridge

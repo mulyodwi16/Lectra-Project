@@ -1,0 +1,78 @@
+.sensor-card {
+    background: #1a1a1a;
+    border: 2px solid #d6ff3f;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 10px;
+    min-width: 250px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(214, 255, 63, 0.1);
+}
+
+.sensor-card:hover {
+    box-shadow: 0 0 20px rgba(214, 255, 63, 0.3);
+    transform: translateY(-2px);
+}
+
+.sensor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.sensor-name {
+    color: #d6ff3f;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    text-transform: capitalize;
+}
+
+.sensor-code {
+    color: #999;
+    font-size: 12px;
+    font-family: monospace;
+    background: #0a0a0a;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.sensor-value {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 15px 0;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+}
+
+.sensor-type {
+    color: #666;
+    font-size: 12px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sensor-button {
+    width: 100%;
+    padding: 10px;
+    background: #d6ff3f;
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.sensor-button:hover {
+    background: #fff;
+    box-shadow: 0 0 15px rgba(214, 255, 63, 0.5);
+}
+
+.sensor-button:active {
+    transform: scale(0.98);
+}
