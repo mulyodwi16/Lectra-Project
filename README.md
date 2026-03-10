@@ -2,6 +2,8 @@
 
 Dashboard real-time untuk monitoring sensor IoT menggunakan Tuya API dengan teknologi terkini.
 
+📦 **Repository**: [GitHub - mulyodwi16/Lectra-Project](https://github.com/mulyodwi16/Lectra-Project)
+
 ## Stack Technologies
 
 - **Frontend**: React 18 + Vite + TypeScript
@@ -19,14 +21,19 @@ Dashboard real-time untuk monitoring sensor IoT menggunakan Tuya API dengan tekn
 
 ## Quick Start
 
-### 1. Clone & Setup
+### 1. Clone Repository
 
 ```bash
-cd tuya-dashboard
-cp .env.example .env
+git clone https://github.com/mulyodwi16/Lectra-Project.git
+cd Lectra-Project
 ```
 
-### 2. Update .env dengan credentials Tuya Anda
+### 2. Setup Environment
+
+```bash
+cp .env.example .env
+# Edit .env dan masukkan Tuya credentials Anda
+```
 
 ```bash
 TUYA_CLIENT_ID=your_client_id
@@ -37,12 +44,35 @@ TUYA_DEVICE_ID=your_device_id
 ### 3. Run with Docker
 
 ```bash
+# Build images
+docker-compose build
+
+# Start services
 docker-compose up -d
 ```
 
-Akses dashboard di: `http://localhost`
+✅ Akses dashboard di: **http://localhost**
 
-Traefik dashboard: `http://localhost:8080`
+🔧 Traefik dashboard: **http://localhost:8080**
+
+### Using Makefile (Recommended)
+
+```bash
+make build        # Build images
+make up           # Start services
+make down         # Stop services
+make logs         # View all logs
+make backend-logs # View backend logs
+make frontend-logs# View frontend logs
+make clean        # Remove services & images
+make rebuild      # Rebuild all (no cache)
+```
+
+Or untuk development lokal:
+```bash
+make dev-backend   # Run Go backend locally
+make dev-frontend  # Run React frontend locally
+```
 
 ## Development Lokal (Tanpa Docker)
 
@@ -52,8 +82,11 @@ Traefik dashboard: `http://localhost:8080`
 cd backend
 go mod tidy
 cp .env.example .env
-# Update .env dengan credentials Tuya
+
+# Edit .env dengan Tuya credentials
+# Kemudian run:
 go run .
+
 # Backend berjalan di http://localhost:3000
 ```
 
@@ -63,30 +96,48 @@ go run .
 cd frontend
 npm install
 cp .env.example .env
+
+# Edit .env jika perlu (API URL sudah benar untuk local dev)
+# Kemudian run:
 npm run dev
+
 # Frontend berjalan di http://localhost:5173
+```
+
+### Build untuk Production (Lokal)
+
+```bash
+# Backend
+cd backend
+CGO_ENABLED=0 GOOS=linux go build -o lectra-backend .
+
+# Frontend
+cd frontend
+npm run build
+# Output: dist/
 ```
 
 ## Project Structure
 
 ```
-tuya-dashboard/
+Lectra-Project/
 ├── backend/
 │   ├── go.mod
 │   ├── go.sum
-│   ├── main.go
-│   ├── tuya_service.go
+│   ├── main.go                 (Fiber HTTP server & handlers)
+│   ├── tuya_service.go         (Tuya API integration)
 │   ├── Dockerfile
+│   ├── .dockerignore
 │   └── .env.example
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Dashboard.tsx
+│   │   │   ├── Dashboard.tsx    (Main dashboard UI)
 │   │   │   ├── Dashboard.css
-│   │   │   ├── SensorCard.tsx
+│   │   │   ├── SensorCard.tsx   (Sensor card component)
 │   │   │   └── SensorCard.css
 │   │   ├── services/
-│   │   │   └── tuyaService.ts
+│   │   │   └── tuyaService.ts   (Tuya API client)
 │   │   ├── App.tsx
 │   │   ├── App.css
 │   │   └── main.tsx
@@ -94,11 +145,16 @@ tuya-dashboard/
 │   ├── package.json
 │   ├── vite.config.ts
 │   ├── tsconfig.json
+│   ├── tsconfig.node.json
 │   ├── nginx.conf
 │   ├── Dockerfile
+│   ├── .dockerignore
 │   └── .env.example
-├── docker-compose.yml
-└── .env.example
+├── docker-compose.yml          (All services + Traefik)
+├── Makefile                    (Helper commands)
+├── README.md
+├── .env.example
+└── .gitignore
 ```
 
 ## API Endpoints
@@ -165,15 +221,76 @@ GET /api/v1/health
 
 ## Production Deployment
 
-### AWS/GCP/DigitalOcean
+### Using Docker Compose (Recommended)
+
 ```bash
-docker-compose -f docker-compose.yml up -d
+# 1. Clone repository ke server
+git clone https://github.com/mulyodwi16/Lectra-Project.git
+cd Lectra-Project
+
+# 2. Setup environment
+cp .env.example .env
+# Edit .env dengan production credentials
+
+# 3. Build & run
+docker-compose build
+docker-compose up -d
+
+# 4. Verify
+docker-compose logs -f
+curl http://localhost/api/v1/health
 ```
 
-Pastikan:
-- Security groups open port 80/443
-- SSL certificate via Let's Encrypt + Traefik
-- Environment variables aman (gunakan secrets manager)
+### AWS/GCP/DigitalOcean Deployment
+
+**Prerequisites:**
+- VPS dengan Docker & Docker Compose installed
+- Domain name untuk reverse proxy
+- SSL certificate (Let's Encrypt)
+
+**Steps:**
+```bash
+# 1. SSH ke server
+ssh ubuntu@your-server-ip
+
+# 2. Clone & setup (seperti di atas)
+# ... follow steps 1-3
+
+# 3. Configure SSL dengan Traefik (update docker-compose.yml)
+# 4. Open firewall: ports 80, 443
+# 5. Point domain ke server IP
+```
+
+### Environment Variables untuk Production
+
+```env
+ENVIRONMENT=production
+TUYA_CLIENT_ID=prod_client_id
+TUYA_ACCESS_TOKEN=prod_access_token
+TUYA_DEVICE_ID=prod_device_id
+```
+
+⚠️ **Security:** Gunakan AWS Secrets Manager, GCP Secret Manager, atau HashiCorp Vault untuk production.
+
+## Contributing
+
+Want to contribute? Great! Follow these steps:
+
+1. Fork repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+## Roadmap
+
+- [ ] WebSocket untuk real-time updates
+- [ ] Database (PostgreSQL) untuk historical data
+- [ ] Authentication & user management
+- [ ] Multi-device support
+- [ ] Mobile app (React Native)
+- [ ] Advanced analytics & charts
+- [ ] Alert system untuk anomaly detection
 
 ## License
 
