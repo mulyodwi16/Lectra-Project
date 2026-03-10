@@ -1,0 +1,146 @@
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 200px;
+    height: 100vh;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+    border-right: 2px solid #d6ff3f;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 15px;
+    box-shadow: 4px 0 15px rgba(214, 255, 63, 0.1);
+}
+
+.sidebar-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(214, 255, 63, 0.2);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.logo-icon {
+    font-size: 24px;
+}
+
+.logo-text {
+    color: #d6ff3f;
+    font-weight: bold;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.logo-subtext {
+    color: #999;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 12px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: #999;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nav-item:hover {
+    background: rgba(214, 255, 63, 0.05);
+    color: #d6ff3f;
+    transform: translateX(4px);
+}
+
+.nav-item:hover .nav-icon svg {
+    stroke: #d6ff3f;
+}
+
+.nav-item.active {
+    background: #d6ff3f;
+    color: #000;
+    border-color: #d6ff3f;
+    font-weight: 600;
+}
+
+.nav-item.active .nav-icon svg {
+    stroke: #000;
+}
+
+.nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    color: inherit;
+}
+
+.nav-icon svg {
+    stroke: inherit;
+    transition: stroke 0.3s ease;
+}
+
+.nav-label {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 180px;
+        padding: 15px 10px;
+    }
+
+    .nav-label {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar {
+        width: 70px;
+        padding: 10px 5px;
+    }
+
+    .sidebar-header {
+        margin-bottom: 20px;
+    }
+
+    .logo-text {
+        display: none;
+    }
+
+    .nav-label {
+        display: none;
+    }
+
+    .nav-item {
+        justify-content: center;
+        padding: 12px;
+    }
+}

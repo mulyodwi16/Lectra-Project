@@ -6,11 +6,34 @@ Dashboard real-time untuk monitoring sensor IoT menggunakan Tuya API dengan tekn
 
 ## Stack Technologies
 
-- **Frontend**: React 18 + Vite + TypeScript
+- **Frontend**: React 18 + Vite + TypeScript + Nginx (internal web server)
 - **Backend**: Go + Fiber
 - **Styling**: CSS Grid, Responsive Design (Black & #d6ff3f theme)
 - **API**: Tuya Cloud API Integration
-- **Infrastructure**: Docker + Docker Compose + Traefik (Reverse Proxy)
+- **Infrastructure**: Docker + Docker Compose + **Traefik** (Reverse Proxy)
+
+## Architecture
+
+```
+┌─────────────────────────────────────────┐
+│         Traefik Reverse Proxy           │
+│  (lectra.local:80) - Routing Layer      │
+└──────────────┬──────────────────────────┘
+               │
+        ┌──────┴──────┐
+        │             │
+   ┌────▼────┐   ┌────▼────┐
+   │Frontend  │   │Backend   │
+   │Container │   │Container │
+   ├──────────┤   ├──────────┤
+   │ Nginx 80 │   │ Fiber:3k │
+   │ React    │   │ Go API   │
+   └──────────┘   └──────────┘
+```
+
+**Traefik Routing**: 
+- `http://lectra.local` → Frontend (React App)
+- `http://lectra.local/api/*` → Backend (Go API)
 
 ## Prerequisites
 
@@ -51,9 +74,11 @@ docker-compose build
 docker-compose up -d
 ```
 
-✅ Akses dashboard di: **http://localhost**
+✅ Akses dashboard di: **http://lectra.local** (atau `localhost`)
 
 🔧 Traefik dashboard: **http://localhost:8080**
+
+> **⚠️ Catatan**: Nginx di dalam frontend container hanya berfungsi sebagai web server internal untuk serve React app. **Traefik** adalah reverse proxy utama yang menghandle routing semua request dari luar.
 
 ### Using Makefile (Recommended)
 

@@ -1,0 +1,111 @@
+.activity-log {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+    border: 1px solid rgba(214, 255, 63, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    grid-column: 3 / 5;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.activity-log h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.log-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.log-entry {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: rgba(0, 0, 0, 0.5);
+    border-left: 3px solid #333;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.log-entry:hover {
+    background: rgba(214, 255, 63, 0.05);
+    border-left-color: #d6ff3f;
+}
+
+.log-entry.triggered {
+    border-left-color: #ff9800;
+}
+
+.log-entry.alert {
+    border-left-color: #ff4444;
+}
+
+.log-entry.normal {
+    border-left-color: #d6ff3f;
+}
+
+.log-status {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.log-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.log-action {
+    font-size: 12px;
+    font-weight: 500;
+    color: #d6ff3f;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.log-classroom {
+    font-size: 11px;
+    color: #999;
+    margin-top: 2px;
+}
+
+.log-time {
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+/* Scrollbar */
+.log-items::-webkit-scrollbar {
+    width: 4px;
+}
+
+.log-items::-webkit-scrollbar-track {
+    background: rgba(214, 255, 63, 0.05);
+    border-radius: 2px;
+}
+
+.log-items::-webkit-scrollbar-thumb {
+    background: #d6ff3f;
+    border-radius: 2px;
+}
+
+.log-items::-webkit-scrollbar-thumb:hover {
+    background: #fff;
+}
+
+@media (max-width: 1200px) {
+    .activity-log {
+        grid-column: 1 / 3;
+    }
+}
